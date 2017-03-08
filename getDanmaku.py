@@ -4,13 +4,12 @@ from __future__ import division
 from StringIO import StringIO
 from gzip import GzipFile
 import gzip
-import urllib2
-import urllib
 import zlib
 import re
 import os
 import binascii 
 import json
+import requests
 
 time = []              #弹幕出现的时间 以秒数为单位
 dmkType = []           #弹幕的模式1..3 滚动弹幕 4底端弹幕 5顶端弹幕 6.逆向弹幕 7精准定位 8高级弹幕
@@ -23,17 +22,9 @@ rowID = []             #弹幕在弹幕数据库中rowID
 emotionLvl = []        #情感等级
 
 def getContent(url):
-	request = urllib2.Request(url)
-	request.add_header('Accept-encoding', 'gzip,deflate')
-	request.add_header('User-Agent',"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36")
-	response = urllib2.urlopen(request)
-	content = response.read()
-	encoding = response.info().get('Content-Encoding')
-	if encoding == 'gzip':
-		content = fgzip(content)
-	elif encoding == 'deflate':
-		content = fdeflate(content)
-	return content
+	headers = {"Accept-Encoding":"gzip,deflate","User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36"}
+	r = requests.get(url,headers=headers)
+	return r.text
 
 def fgzip(data):
 	buf = StringIO(data)
@@ -42,9 +33,9 @@ def fgzip(data):
 
 def fdeflate(data):
 	try:
-		return zlib.decompress(data, -zlib.MAX_WBITS)
+		return zlib.decompress(data,-zlib.MAX_WBITS)
 	except zlib.error:
-		return zlib.decompress(data)
+		return zlib.decompress(data,16+zlib.MAX_WBITS)
 
 def getCid1(aid):
 	url = 'http://www.bilibili.com/video/av' + aid
@@ -69,8 +60,8 @@ def getName(aid):
 
 def getDmk(cid):
 	DmkUrl = ('http://comment.bilibili.com/'+ cid +'.xml')
-	print DmkUrl
-	dmk = getContent('http://comment.bilibili.com/'+ cid +'.xml')	
+	dmk = getContent('http://comment.bilibili.com/'+ cid +'.xml')
+	dmk = dmk.encode('utf8')
 	f = open(cid + '.xml','wb')
 	f.write(dmk)
 	f.close()
@@ -125,13 +116,13 @@ def getDmkText(cid):
 	f = open(cid + '.xml','rU')
 	data = f.read()
 	dmklist = re.findall(".*[>](.*)[<].*",data)
-	f = open(cid + '.txt', 'a+')
+	f = open('C:\\Users\\zzkha\\Desktop\\dmkspider\\dmk.txt', 'a+')
 	for i in range(len(dmklist)):
 		dmkDic = {'dmk': dmklist[i]}
-		f = open(cid + '.txt', 'a+')
+		f = open('C:\\Users\\zzkha\\Desktop\\dmkspider\\dmk.txt', 'a+')
 		f.write(dmklist[i])
 		f.write('\n')
-	f.close()		
+	f.close()
 
 def downloadDMK(aid):
 #       cid = getCid1(aid)
