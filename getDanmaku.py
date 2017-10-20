@@ -12,7 +12,6 @@ import binascii
 import json
 import requests
 import random
-import urllib2
 
 time = []              #弹幕出现的时间 以秒数为单位
 dmkType = []           #弹幕的模式1..3 滚动弹幕 4底端弹幕 5顶端弹幕 6.逆向弹幕 7精准定位 8高级弹幕
